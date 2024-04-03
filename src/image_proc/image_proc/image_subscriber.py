@@ -2,12 +2,15 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from rclpy import qos
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, Range
 from geometry_msgs.msg import Twist 
 import numpy as np
+import matplotlib.pyplot as plt
+
 import cv2
 from cv_bridge import CvBridge
 import apriltag
+from simple_pid import PID
 
 class ImageSubscriber(Node):
 
@@ -19,12 +22,19 @@ class ImageSubscriber(Node):
             depth=1
         )
 
-        self.subscription = self.create_subscription(
+        self.camera_subscription = self.create_subscription(
             Image,
             '/camera1/image_raw',
-            self.listener_callback,qos.qos_profile_sensor_data
+            self.camera_callback,qos.qos_profile_sensor_data
             )
-        self.subscription  # prevent unused variable warning
+        self.camera_subscription  # prevent unused variable warning
+
+        self.ultrasonic_subscription = self.create_subscription(
+            Range,
+            '/ultrasonic_sensor',
+            self.ultrasonic_callback,qos.qos_profile_sensor_data
+            )
+        self.ultrasonic_subscription  # prevent unused variable warning
 
         self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
 
@@ -32,21 +42,31 @@ class ImageSubscriber(Node):
         self.timer = self.create_timer(timer_period, self.publish_vel)
 
         self.dist_from_center = 0
-        self.K = 0.003 # gain for control
+        self.K_center = 0.004 # gain for control
+
+        self.separation_dist = 0
+        self.separation_dist_ref = 0.5
+        self.K_separation = 0.5
+
+        self.pid = PID(0.004, 0.0, 0.0, setpoint=0)
+
+        self.dist_data = np.empty((0))
         
 
     def publish_vel(self):
         msg = Twist()
-        msg.linear.x = self.K*self.dist_from_center
+        # msg.linear.x = self.K_center*self.dist_from_center
+        msg.linear.x = -1*self.pid(self.dist_from_center)
         msg.linear.y = 0.0
         msg.linear.z = 0.0
         msg.angular.x = 0.0
         msg.angular.y = 0.0
         msg.angular.z = 0.0
+        # msg.angular.z = -1.0*self.K_separation*self.separation_dist
 
         self.publisher_.publish(msg)
 
-    def listener_callback(self, msg):
+    def camera_callback(self, msg):
         cv2.destroyAllWindows()
         bridge = CvBridge()
         cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
@@ -66,11 +86,25 @@ class ImageSubscriber(Node):
         tag_center_x = tag.center[0]
 
         self.dist_from_center = img_center_x - tag_center_x
+        
+        print(f"Distance from Center: {self.dist_from_center}\n")
+        # if self.dist_data.size == 100:
+        #     self.dist_data = np.delete(self.dist_data, 0)
+        # self.dist_data = np.append(self.dist_data, [self.dist_from_center])
 
-        print(f"Distance from Center: {img_center_x - tag_center_x}")
+        # plt.clf()
+        # plt.plot(self.dist_data)
+        # plt.plot(np.zeros(100), 'r')
+        # plt.axis([0, 100, -300, 300])
 
-        # img = np.asarray(cv_image)
-        # num_green = np.sum(img(img[:,:,0] > 200))
+        # plt.show(block=False)
+        # plt.pause(0.001)
+
+
+    def ultrasonic_callback(self, msg):
+        self.separation_dist = msg.range - self.separation_dist_ref
+        # print(f"Separation Distance: {self.separation_dist}\n")
+
             
 
 
@@ -81,10 +115,6 @@ def main(args=None):
 
     rclpy.spin(image_subscriber)
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    minimal_subscriber.destroy_node()
     rclpy.shutdown()
 
 
