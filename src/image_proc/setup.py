@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'listener = image_proc.image_subscriber:main',
+            'sync = image_proc.image_subscriber:main',
+            'agv_nav = image_proc.amr_nav:main',
         ],
     },
 )
