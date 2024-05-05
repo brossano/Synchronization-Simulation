@@ -1,0 +1,3 @@
+[submodule "src/Multi-turtlebot3-Gazebo-ROS2"]
+	path = src/Multi-turtlebot3-Gazebo-ROS2
+	url = https://github.com/brossano/Multi-turtlebot3-Gazebo-ROS2.git
