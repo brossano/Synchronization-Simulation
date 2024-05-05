@@ -62,24 +62,24 @@ class ImageSubscriber(Node):
         self.ult_counter = 0
 
         # for testing individual parts
-        self.sync = True
+        # self.sync = True
 
         # for whole sim
-        # self.sync = False
+        self.sync = False
 
 
         self.dist_data = np.empty((0))
 
-        plt.ion()
-        self.fig = plt.figure()
-        self.ax = plt.subplot(1,1,1)
-        self.ax.set_xlim(0,200)
-        # self.ax.set_ylim(-.4,.4)
-        self.ax.set_ylim(-300,300)
-        self.ax.plot(np.zeros(200), 'r')     
-        self.fig.show()
-        self.fig.canvas.flush_events()
-        self.x = range(1,201)
+        # plt.ion()
+        # self.fig = plt.figure()
+        # self.ax = plt.subplot(1,1,1)
+        # self.ax.set_xlim(0,200)
+        # # self.ax.set_ylim(-.4,.4)
+        # self.ax.set_ylim(-300,300)
+        # self.ax.plot(np.zeros(200), 'r')     
+        # self.fig.show()
+        # self.fig.canvas.flush_events()
+        # self.x = range(1,201)
 
          
 
@@ -162,20 +162,20 @@ class ImageSubscriber(Node):
 
         separation_dist = msg.range - self.separation_dist_ref
 
-        if self.dist_data.size == 400:
-            self.dist_data = np.delete(self.dist_data, 0)
+        # if self.dist_data.size == 400:
+        #     self.dist_data = np.delete(self.dist_data, 0)
 
-        self.dist_data = np.append(self.dist_data, [separation_dist])
-        self.ax.clear()
-        self.ax.set_xlim(0,400)
-        self.ax.set_ylim(-.4,.4)
-        self.ax.plot(self.dist_data, 'k-')
-        self.ax.plot(self.separation_dist_ref*np.zeros(400), 'r')
-        self.ax.set_xlabel('Control Iteration')
-        self.ax.set_ylabel('Distance from Setpoint')
-        self.fig.canvas.flush_events()
+        # self.dist_data = np.append(self.dist_data, [separation_dist])
+        # self.ax.clear()
+        # self.ax.set_xlim(0,400)
+        # self.ax.set_ylim(-.4,.4)
+        # self.ax.plot(self.dist_data, 'k-')
+        # self.ax.plot(self.separation_dist_ref*np.zeros(400), 'r')
+        # self.ax.set_xlabel('Control Iteration')
+        # self.ax.set_ylabel('Distance from Setpoint')
+        # self.fig.canvas.flush_events()
 
-        print(f"Separation Distance: {msg.range}")
+        # print(f"Separation Distance: {msg.range}")
 
             
 
